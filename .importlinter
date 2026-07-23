@@ -1,0 +1,237 @@
+; Unit-boundary enforcement (unit-of-work-dependency.md section 6).
+;
+; In a monolith, module boundaries are not kept by convention. These contracts
+; are checked in CI with `lint-imports`.
+;
+; Rules R-1..R-6 are defined in unit-of-work-dependency.md. Only the contracts
+; whose target units already exist are declared here; the rest are added as each
+; unit is generated.
+
+[importlinter]
+root_packages =
+    shared_kernel
+    distance_cost
+    data_management
+    optimization_engine
+    comparison_report
+    security
+    api_orchestration
+; Required so the third-party contracts below can name pydantic, numpy, etc.
+include_external_packages = True
+
+[importlinter:contract:R2-shared-kernel-is-the-root]
+; R-2: shared_kernel must not import any other unit. It is the root of the
+; dependency graph, which is what prevents inter-unit cycles.
+;
+; This contract also transitively protects NFR-U01-R03: shared_kernel cannot
+; reach src/security/, so it cannot be dragged into a PII-handling path.
+name = R-2: shared_kernel imports nothing from other units
+type = forbidden
+source_modules =
+    shared_kernel
+forbidden_modules =
+    distance_cost
+    data_management
+    optimization_engine
+    comparison_report
+    security
+    api_orchestration
+    frontend
+
+[importlinter:contract:R3-distance-cost-depends-only-on-shared-kernel]
+; R-3: distance_cost may import only shared_kernel among the units. This is what
+; keeps C-01 a pure function: it structurally cannot reach the database (U-03),
+; the solver (U-04), or anything with a side effect. INV-07..INV-09 are therefore
+; property-testable with no mocks.
+name = R-3: distance_cost imports only shared_kernel
+type = forbidden
+source_modules =
+    distance_cost
+forbidden_modules =
+    data_management
+    optimization_engine
+    comparison_report
+    security
+    api_orchestration
+    frontend
+
+[importlinter:contract:distance-cost-uses-standard-library-only]
+; distance_cost is pure functions: standard library + shared_kernel only.
+; R-3 above cannot catch `import numpy` (numpy is not a unit), so this second
+; contract closes that gap. numpy was considered for the distance matrix and
+; rejected (U-02 NFR Requirements Q1=A) - the matrix is a sub-second naive loop.
+name = distance_cost uses the standard library only
+type = forbidden
+source_modules =
+    distance_cost
+forbidden_modules =
+    numpy
+    pydantic
+    fastapi
+    sqlalchemy
+    hypothesis
+
+[importlinter:contract:shared-kernel-has-no-third-party-runtime-deps]
+; U-01's production code depends on the standard library alone
+; (nfr-design/logical-components.md). This is why swapping SQLite for
+; PostgreSQL, or FastAPI for anything else, never touches U-01.
+;
+; Pydantic in particular is confined to U-07 (NFR Design pattern 1, Q1=A):
+; putting it in the domain layer would make the domain depend on a web
+; framework library and defeat the hexagonal dependency rule.
+name = shared_kernel uses the standard library only
+type = forbidden
+source_modules =
+    shared_kernel
+forbidden_modules =
+    pydantic
+    fastapi
+    sqlalchemy
+    hypothesis
+
+[importlinter:contract:R4-data-management-depends-only-on-shared-kernel-and-distance-cost]
+; R-4: data_management may import only shared_kernel and distance_cost among the
+; units. It is the persistence layer; it must not reach the solver (U-04),
+; the security module (U-06), the HTTP layer (U-07), or the frontend. In
+; particular it must have no path to U-06, which is how MU-02's formula-injection
+; sanitiser stays an injected argument (U03-H5) rather than a direct dependency.
+name = R-4: data_management imports only shared_kernel and distance_cost
+type = forbidden
+source_modules =
+    data_management
+forbidden_modules =
+    optimization_engine
+    comparison_report
+    security
+    api_orchestration
+    frontend
+
+[importlinter:contract:data-management-third-party-allowlist]
+; U-03 is the first unit with production dependencies: sqlalchemy and alembic,
+; and those alone. Pydantic and FastAPI belong to U-07's API boundary and must
+; not leak into the persistence/domain layer (NFR Design pattern 1); numpy was
+; rejected for U-02 and has no place here either. sqlalchemy/alembic are
+; deliberately NOT forbidden — they are U-03's sanctioned stack.
+name = data_management adds only the sanctioned persistence stack
+type = forbidden
+source_modules =
+    data_management
+forbidden_modules =
+    numpy
+    pydantic
+    fastapi
+
+[importlinter:contract:R5-optimization-engine-depends-only-on-lower-units]
+; R-5: optimization_engine may import shared_kernel, distance_cost and
+; data_management (it persists results to U-03's tables). It must not reach the
+; security module, the comparison report, the HTTP layer, or the frontend.
+name = R-5: optimization_engine imports only shared_kernel, distance_cost, data_management
+type = forbidden
+source_modules =
+    optimization_engine
+forbidden_modules =
+    security
+    comparison_report
+    api_orchestration
+    frontend
+
+[importlinter:contract:optimization-engine-third-party-allowlist]
+; U-04's solver dependency is ortools, and it is deliberately NOT forbidden.
+; Pydantic and FastAPI belong to U-07 and must not leak into the solver layer.
+; (ortools itself is further confined to cp_sat_adapter by design, DP-03.)
+name = optimization_engine adds only the sanctioned solver stack
+type = forbidden
+source_modules =
+    optimization_engine
+forbidden_modules =
+    pydantic
+    fastapi
+
+[importlinter:contract:R6-comparison-report-depends-only-on-lower-units]
+; R-6: comparison_report composes shared_kernel, distance_cost, data_management and
+; optimization_engine. It must not reach the security module, the HTTP layer, or the
+; frontend. The distance_cost dependency was added for U-05 (U05-H1): the replay
+; travel matrix and the baseline evaluation both need it; the graph stays acyclic.
+name = R-6: comparison_report imports only the lower backend units
+type = forbidden
+source_modules =
+    comparison_report
+forbidden_modules =
+    security
+    api_orchestration
+    frontend
+
+[importlinter:contract:comparison-report-no-web-framework]
+; U-05 adds no production dependency; pydantic/fastapi belong to U-07's boundary.
+name = comparison_report keeps the web framework out
+type = forbidden
+source_modules =
+    comparison_report
+forbidden_modules =
+    pydantic
+    fastapi
+
+[importlinter:contract:R7-security-depends-only-on-shared-kernel]
+; R-7: security depends on shared_kernel and nothing else among the units. It must
+; not reach persistence, the solver, the report, the HTTP layer or the frontend.
+;
+; The interesting consequence is with U-01's R-2 (shared_kernel must not import
+; security): the two contracts together mean PII cannot travel in either direction.
+; U-06 never sees a Staff, so a name can never reach the audit log.
+name = R-7: security imports only shared_kernel
+type = forbidden
+source_modules =
+    security
+forbidden_modules =
+    distance_cost
+    data_management
+    optimization_engine
+    comparison_report
+    api_orchestration
+    frontend
+
+[importlinter:contract:security-cannot-persist-anything]
+; THIS CONTRACT IS THE DESIGN.
+;
+; U-06's NFR Design (Q2=A) says sessions are persisted through an injected
+; SessionStorePort, implemented by U-07 against U-03's sessions table. Forbidding
+; sqlalchemy is what turns that from an intention into a guarantee: U-06 physically
+; cannot write a session to the database, so the port MUST be injected. A future
+; contributor cannot "just add a quick query here" without breaking the build.
+;
+; pydantic/fastapi are U-07's API boundary and have no business in the security
+; modules either. argon2 is deliberately NOT forbidden - it is U-06's sanctioned
+; dependency (SECURITY-12).
+name = security cannot persist anything (SessionStorePort must be injected)
+type = forbidden
+source_modules =
+    security
+forbidden_modules =
+    sqlalchemy
+    alembic
+    pydantic
+    fastapi
+
+[importlinter:contract:R8-api-orchestration-is-the-integration-point]
+; R-8: api_orchestration composes every backend unit - that is its job. The one
+; direction it must not go is outward: the frontend is a separate deployable that
+; talks to U-07 over HTTP (NFR-M05), never the reverse.
+name = R-8: api_orchestration does not import the frontend
+type = forbidden
+source_modules =
+    api_orchestration
+forbidden_modules =
+    frontend
+
+[importlinter:contract:pydantic-and-fastapi-live-only-in-u07]
+; The positive statement of what every other unit's contract has been forbidding:
+; U-01's NFR Design confined Pydantic to the API boundary, and six units' contracts
+; enforced it. This is the one place it is allowed. sqlalchemy is allowed too,
+; because U-06 is forbidden it and therefore U-07 must implement SqlSessionStore
+; (U06-H2) - the contracts decide where the code lives.
+name = api_orchestration may use the web stack (and is the only unit that may)
+type = forbidden
+source_modules =
+    api_orchestration
+forbidden_modules =
+    numpy

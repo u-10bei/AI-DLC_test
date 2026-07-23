@@ -1,0 +1,24 @@
+# Local-only settings
+.claude/settings.local.json
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+dist/
+build/
+
+# Tooling caches
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.hypothesis/
+
+# Runtime data (must live on an encrypted volume — see shared-infrastructure.md)
+*.db
+*.db-wal
+*.db-shm
+audit/
+

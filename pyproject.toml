@@ -1,0 +1,125 @@
+[project]
+name = "staff-assignment-optimizer"
+version = "0.1.0"
+description = "居住地考慮型 従事者割当最適化システム（PoC）"
+requires-python = ">=3.11,<3.14"
+
+# U-01 shared-kernel and U-02 distance-cost have NO production dependencies.
+# Pydantic is confined to U-07 api-orchestration (NFR Design pattern 1).
+# U-03 data-management is the FIRST unit to add production dependencies: the
+# persistence stack. Pinned per SECURITY-10 (U03-H7); kept in pip-audit scope.
+# The pins match the late-2024 dev-tool baseline already used above.
+dependencies = [
+    "sqlalchemy==2.0.36",  # Core (schema, queries, executemany) + hand-written mappers
+    "alembic==1.14.0",     # schema migrations (SQLite -> PostgreSQL is a URL change)
+    "ortools==9.11.4210",  # U-04: CP-SAT MILP solver (H-3). Confined to cp_sat_adapter.py
+    "argon2-cffi==23.1.0",  # U-06: Argon2id password hashing (SECURITY-12, U06-H1)
+    "fastapi==0.115.6",     # U-07: HTTP boundary. Pydantic is confined to this unit
+    "uvicorn==0.34.0",      # U-07: ASGI server for the API process
+    "pydantic==2.10.4",     # U-07: DTO validation at the API boundary (SECURITY-05)
+]
+
+[dependency-groups]
+dev = [
+    "pytest==8.3.4",
+    "hypothesis==6.122.3",
+    "mypy==1.14.0",
+    "ruff==0.8.4",
+    "import-linter==2.1",
+    "httpx==0.28.1",  # FastAPI TestClient: U-07 is tested through the real HTTP boundary
+]
+
+[build-system]
+requires = ["hatchling==1.27.0"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = [
+    "src/shared_kernel",
+    "src/distance_cost",
+    "src/data_management",
+    "src/optimization_engine",
+    "src/comparison_report",
+    "src/security",
+    "src/api_orchestration",
+]
+
+# ---------------------------------------------------------------------------
+# mypy — strict mode is enforced in CI (NFR Requirements Q11=A).
+# U-01's types bind six downstream units; breaking changes must fail the build.
+# NewType identifiers (StaffId, FacilityId, ...) only catch mix-ups under strict.
+# ---------------------------------------------------------------------------
+[tool.mypy]
+python_version = "3.11"
+strict = true
+warn_unreachable = true
+disallow_any_explicit = true
+pretty = true
+files = ["src", "tests"]
+
+[[tool.mypy.overrides]]
+module = "tests.*"
+disallow_any_explicit = false
+
+# OR-Tools ships no type stubs. Confine the untyped-solver interaction to the one
+# adapter module that wraps it (DP-03) — the strict guarantee holds everywhere else.
+[[tool.mypy.overrides]]
+module = "ortools.*"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "optimization_engine.cp_sat_adapter"
+disallow_untyped_calls = false
+disallow_any_explicit = false
+warn_return_any = false
+
+# Every pydantic BaseModel subclass trips disallow_any_explicit, because pydantic's
+# own BaseModel declares `__init__(**data: Any)` — the Any is the framework's, not
+# ours (verified: a three-line model with no Any of our own reports the same error).
+# Same containment as cp_sat_adapter above, and the containment is what makes the
+# waiver safe rather than a hole: import-linter already keeps pydantic out of
+# U-01..U-06, and this override is scoped to one module, so defining a BaseModel
+# anywhere else in U-07 fails THIS gate. dto.py stays the only place models live
+# (LC-04); converters.py and routers.py stay under full strict checking.
+[[tool.mypy.overrides]]
+module = "api_orchestration.dto"
+disallow_any_explicit = false
+
+# ---------------------------------------------------------------------------
+# ruff
+# ---------------------------------------------------------------------------
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+src = ["src", "tests"]
+# Alembic migration scaffolding follows Alembic's own conventions, not ours.
+extend-exclude = ["alembic"]
+
+[tool.ruff.lint]
+select = [
+    "E", "W",   # pycodestyle
+    "F",        # pyflakes
+    "I",        # isort
+    "N",        # pep8-naming
+    "UP",       # pyupgrade
+    "B",        # flake8-bugbear
+    "S",        # flake8-bandit
+    "RUF",      # ruff-specific
+]
+ignore = [
+    "E501",  # line length is handled by the formatter
+]
+
+[tool.ruff.lint.per-file-ignores]
+# assert is the idiom in tests; S101 would flag every one of them.
+"tests/**" = ["S101"]
+
+# ---------------------------------------------------------------------------
+# pytest + Hypothesis
+#
+# Hypothesis profiles are registered in tests/conftest.py, not here — Hypothesis
+# does not read a [tool.hypothesis] table.
+# ---------------------------------------------------------------------------
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "--strict-markers --strict-config -ra"
