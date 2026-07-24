@@ -22,3 +22,7 @@ build/
 *.db-shm
 audit/
 
+
+# 運用手順書は非公開（ホスト名・パス・受け入れ確認・障害時挙動を含むため）。
+# ローカルには残るが、このリポジトリでは追跡しない。
+aidlc-docs/operations/deployment-runbook.md

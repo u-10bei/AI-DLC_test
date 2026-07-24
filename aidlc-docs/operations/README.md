@@ -21,9 +21,9 @@
 | 文書 | 内容 |
 |------|------|
 | [deployment-plan.md](deployment-plan.md) | デプロイ計画（決定事項・前提変更 DEP-H1・作業項目・受け入れ確認） |
-| [deployment-runbook.md](deployment-runbook.md) | Azure VM への手順書（リソース作成→配備→受け入れ確認→運用） |
+| deployment-runbook.md | **非公開**（このリポジトリには含めません）。Azure VM への手順書。ホスト名・パス・受け入れ確認・障害時の挙動を含むため、別途管理します |
 
-デプロイ用資材は [`deploy/`](../../deploy/)（systemd unit、Caddyfile、環境変数サンプル、cron スクリプト）。
+デプロイ用資材は [`deploy/`](../../deploy/)（systemd unit、nginx 設定サンプル、環境変数サンプル、cron スクリプト）。
 
 ---
 
