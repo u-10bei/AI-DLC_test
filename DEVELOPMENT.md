@@ -126,7 +126,7 @@ ESLint の `no-restricted-imports` で機械的に禁止しており、バック
 
 ```bash
 # API プロセス（U-01〜U-07 を含む）
-uvicorn api_orchestration:build_application --factory --port 8000
+uvicorn api_orchestration.asgi:app --port 8000
 # ジョブワーカー（最適化計算を別プロセスで実行）
 python -m api_orchestration.worker
 # フロント: 方式A（Vite dev, デモ向き）または 方式B（build して backend が配信）

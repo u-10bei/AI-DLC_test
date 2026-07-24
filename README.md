@@ -94,11 +94,11 @@
 ```bash
 # バックエンド（API + ワーカー）
 uv sync
-uvicorn api_orchestration:build_application --factory --port 8000   # API
-python -m api_orchestration.worker                                   # 最適化ワーカー（別プロセス）
+uvicorn api_orchestration.asgi:app --port 8000   # API
+python -m api_orchestration.worker               # 最適化ワーカー（別プロセス）
 
 # フロントエンド
-cd src/frontend && npm install && npm run dev                        # 開発サーバ（API を :8000 へプロキシ）
+cd src/frontend && npm install && npm run dev    # 開発サーバ（API を :8000 へプロキシ）
 ```
 
 セットアップ・テスト・ビルドの詳細、開発上の注意は **[DEVELOPMENT.md](DEVELOPMENT.md)** を参照してください。

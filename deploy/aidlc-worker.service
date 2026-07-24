@@ -1,0 +1,32 @@
+[Unit]
+Description=AI-DLC PoC - optimization job worker
+Documentation=https://github.com/u-10bei/AI-DLC_test
+After=network-online.target aidlc-api.service
+Wants=network-online.target
+
+[Service]
+Type=exec
+User=aidlc
+Group=aidlc
+WorkingDirectory=/srv/aidlc/app
+EnvironmentFile=/etc/aidlc/app.env
+
+# 求解は最大 300 秒。API プロセスを塞がないよう別プロセスで動かす
+# (shared-infrastructure.md §2)。API と同じ環境変数を読むこと。
+ExecStart=/srv/aidlc/venv/bin/python -m api_orchestration.worker
+Environment=PYTHONPATH=/srv/aidlc/app/src
+
+Restart=always
+RestartSec=5
+
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/srv/aidlc/data /srv/aidlc/audit
+
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

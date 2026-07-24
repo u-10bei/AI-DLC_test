@@ -1,0 +1,35 @@
+[Unit]
+Description=AI-DLC PoC - API process (FastAPI/uvicorn)
+Documentation=https://github.com/u-10bei/AI-DLC_test
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=exec
+User=aidlc
+Group=aidlc
+WorkingDirectory=/srv/aidlc/app
+EnvironmentFile=/etc/aidlc/app.env
+
+# 127.0.0.1 のみにバインド: リバースプロキシ以外から直接到達させない
+# (deployment-plan.md §8)
+ExecStart=/srv/aidlc/venv/bin/uvicorn api_orchestration.asgi:app \
+    --host 127.0.0.1 --port 8000 --proxy-headers
+Environment=PYTHONPATH=/srv/aidlc/app/src
+
+Restart=always
+RestartSec=5
+
+# 最小権限
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+# データと監査ログのみ書き込み可（監査ログは chattr +a により追記のみ）
+ReadWritePaths=/srv/aidlc/data /srv/aidlc/audit
+
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

@@ -96,7 +96,11 @@ def run_forever(engine: Engine, config: AppConfig) -> None:  # pragma: no cover 
 def main() -> None:  # pragma: no cover - CLI entry point
     from data_management import create_db_engine
 
-    config = AppConfig()
+    from .settings import load_config_from_env
+
+    # The worker must read the SAME environment configuration as the API process,
+    # or it would solve against a different database than the one requests write to.
+    config = load_config_from_env()
     run_forever(create_db_engine(config.database_url), config)
 
 

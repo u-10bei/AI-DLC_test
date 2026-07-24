@@ -66,7 +66,7 @@ npm run build               # tsc --noEmit && vite build -> src/frontend/dist/
 
 ```bash
 # 方式A（推奨・デモ用）: フロントは Vite dev、API 呼び出しを :8000 の backend にプロキシ
-uvicorn api_orchestration:build_application --factory --port 8000   # 別ターミナル
+uvicorn api_orchestration.asgi:app --port 8000   # 別ターミナル
 cd src/frontend && npm run dev                                      # Vite が SPA を配信
 
 # 方式B（本番類似・単一サーバー）: フロントをビルドし backend が dist を配信

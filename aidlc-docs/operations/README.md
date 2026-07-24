@@ -16,6 +16,17 @@
 
 ---
 
+## デプロイ
+
+| 文書 | 内容 |
+|------|------|
+| [deployment-plan.md](deployment-plan.md) | デプロイ計画（決定事項・前提変更 DEP-H1・作業項目・受け入れ確認） |
+| [deployment-runbook.md](deployment-runbook.md) | Azure VM への手順書（リソース作成→配備→受け入れ確認→運用） |
+
+デプロイ用資材は [`deploy/`](../../deploy/)（systemd unit、Caddyfile、環境変数サンプル、cron スクリプト）。
+
+---
+
 ## 関連ドキュメント
 
 - **要件・ストーリー**: `aidlc-docs/inception/requirements/`、`aidlc-docs/inception/user-stories/stories.md`、`personas.md`

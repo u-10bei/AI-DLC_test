@@ -48,7 +48,7 @@ cd src/frontend && npm test            # 写像ラウンドトリップ PBT（�
 
 ```bash
 # 1. backend + worker を起動
-uvicorn api_orchestration:build_application --factory --port 8000
+uvicorn api_orchestration.asgi:app --port 8000
 python -m api_orchestration.worker            # 別プロセス（求解）
 # 2. フロント（Vite dev、API を :8000 にプロキシ）
 cd src/frontend && npm run dev

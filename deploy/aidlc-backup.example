@@ -1,0 +1,21 @@
+#!/bin/bash
+# AI-DLC PoC — SQLite バックアップ（G-6）
+#
+# 配置先: /usr/local/sbin/aidlc-backup  （root 所有・0700）
+# cron:   30 1 * * *  /usr/local/sbin/aidlc-backup
+#
+# ⚠️ 単純な cp は使わない。WAL モードで動作しているため、
+#    cp では -wal / -shm と不整合なコピーになりうる。
+#    sqlite3 の .backup はオンラインで整合性のあるコピーを作る。
+set -euo pipefail
+
+DB=/srv/aidlc/data/app.db
+DEST=/srv/aidlc/backup
+STAMP="$(date -u +%Y%m%d-%H%M%S)"
+RETAIN_DAYS=30
+
+mkdir -p "${DEST}"
+sqlite3 "${DB}" ".backup '${DEST}/app-${STAMP}.db'"
+chmod 0600 "${DEST}/app-${STAMP}.db"
+
+find "${DEST}" -name 'app-*.db' -mtime "+${RETAIN_DAYS}" -delete

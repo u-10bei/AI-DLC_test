@@ -1,0 +1,30 @@
+#!/bin/bash
+# AI-DLC PoC — 監査ログのローテーション（SECURITY-14）
+#
+# 配置先: /usr/local/sbin/aidlc-audit-rotate  （root 所有・0700）
+# cron:   0 1 * * *  /usr/local/sbin/aidlc-audit-rotate
+#
+# 設計上の要点（shared-infrastructure.md §3）:
+#   - 監査ログは追記専用（chattr +a）。アプリ実行ユーザ(aidlc)は追記のみ可能で削除できない。
+#   - ローテーションは権限を分けた root の cron が行う。
+#     アプリが自分でローテートできてしまうと「追記専用」の意味が失われる。
+#   - 保持期間は 90 日。
+set -euo pipefail
+
+AUDIT_DIR=/srv/aidlc/audit
+CURRENT="${AUDIT_DIR}/current.jsonl"
+STAMP="$(date -u +%Y%m%d)"
+RETAIN_DAYS=90
+
+[ -f "${CURRENT}" ] || exit 0
+
+# 追記専用属性を一時的に外す（root のみ可能）
+chattr -a "${CURRENT}"
+mv "${CURRENT}" "${AUDIT_DIR}/audit-${STAMP}.jsonl"
+
+# 新しい current を作り、アプリユーザが追記できるようにして追記専用に戻す
+install -o aidlc -g aidlc -m 0640 /dev/null "${CURRENT}"
+chattr +a "${CURRENT}"
+
+# 保持期間を超えたものを削除
+find "${AUDIT_DIR}" -name 'audit-*.jsonl' -mtime "+${RETAIN_DAYS}" -delete

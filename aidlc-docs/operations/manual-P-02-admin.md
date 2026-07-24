@@ -95,7 +95,7 @@
 
 ```bash
 # API プロセス（U-01〜U-07 を含む）
-uvicorn api_orchestration:build_application --factory --port 8000
+uvicorn api_orchestration.asgi:app --port 8000
 # ジョブワーカー（最適化計算を別プロセスで実行）
 python -m api_orchestration.worker
 # フロントエンド（本番類似・単一サーバー配信）
