@@ -2539,3 +2539,10 @@ FINDING 2 (constraint that binds Code Generation): shared-infrastructure.md sect
 **Context**: OPERATIONS - runbook GUI conversion + network posture decision recorded.
 
 ---
+## OPERATIONS - Deployment aligned to the proven nginx configuration
+**Timestamp**: 2026-07-24T15:10:00Z
+**User Input**: "リソース側で制限をかけている可能性はありますか？" -> investigation -> "お願いします。"
+**AI Response**: "[REDACTED 2026-07-24: this entry originally quoted details of a SEPARATE internal system (real allowlisted source IP addresses, a host hardware identifier, internal config paths and service status). That information does not belong in this public repository and has been removed. Substance retained:] Investigated an existing internal deployment on the same platform and confirmed that its IP restriction is applied at the reverse proxy, not in application code. Corrected my earlier statement that no IP restriction existed - that was true only of the application directory I had searched. USER APPROVED aligning our deployment to that proven pattern. Key insight adopted: serving the ACME challenge from port 80 under /.well-known/ OUTSIDE the IP restriction lets port 443 stay IP-restricted while certificates still issue and renew - better than the earlier decision (plan section 14) to open 443 and rely on the application allowlist alone. Changes: deploy/nginx-aidlc.conf.example replaces the Caddy example (allow/deny on 443, ACME location on 80, mandatory access_log for SECURITY-02, client_max_body_size 50M so master CSV import does not 413, proxy to 127.0.0.1:8000 with X-Forwarded-For); runbook section 9 rewritten for nginx + certbot --webroot; header, NSG notes, acceptance checks A-2/A-8 and troubleshooting updated; deployment-plan section 15 supersedes section 14; sections 6/7 annotated and section 8 topology redrawn; P-02 admin manual updated for the two-layer restriction."
+**Context**: OPERATIONS - deployment now mirrors the proven nginx setup. Defence: nginx allow/deny -> app allowlist -> auth/rate limit.
+
+---

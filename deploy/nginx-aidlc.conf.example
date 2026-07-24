@@ -1,0 +1,77 @@
+# AI-DLC PoC — nginx リバースプロキシ設定
+#
+# 配置先: /etc/nginx/sites-available/aidlc
+# 有効化: sudo ln -s /etc/nginx/sites-available/aidlc /etc/nginx/sites-enabled/
+#
+# 本設定は、同一プラットフォーム上で稼働実績のある nginx 構成を踏襲したもの。
+#
+# 【設計上の要点】
+#  1. IP 制限は 443 の server ブロックに置く（allow/deny）。
+#  2. Let's Encrypt の検証は 80 の /.well-known/acme-challenge/ で受ける。
+#     ここは IP 制限の外側にあるため、**IP を絞ったまま証明書の取得・自動更新ができる**。
+#     （443 を全開放して app 層だけで守る必要がない）
+#  3. アプリへは 127.0.0.1:8000 にのみ転送する。uvicorn も 127.0.0.1 バインド。
+#  4. X-Forwarded-For を付与する。アプリ側は AIDLC_TRUSTED_PROXIES=127.0.0.1 で
+#     このヘッダを信頼し、送信元 IP を判定する。
+#  5. ⚠️ SECURITY-02（アクセスログ）: 自前プロキシ構成では、access_log が
+#     アクセスログ要件を満たす唯一の手段。無効化しないこと。
+
+# ---- HTTP: ACME 検証を受け、それ以外は HTTPS へリダイレクト ----
+server {
+    listen 80;
+    listen [::]:80;
+    server_name <HOSTNAME>;   # 例: <label>.<region>.cloudapp.azure.com
+
+    # CSV 一括取込のため既定(1M)から引き上げる
+    client_max_body_size 50M;
+
+    # Let's Encrypt の更新認証用（IP 制限の対象外。ここを絞ると証明書を取得できない）
+    location /.well-known/acme-challenge/ {
+        root /var/www/html;
+    }
+
+    location / {
+        return 301 https://$host$request_uri;
+    }
+}
+
+# ---- HTTPS: IP 制限 + TLS 終端 + アプリへの転送 ----
+server {
+    listen 443 ssl http2;
+    listen [::]:443 ssl http2;
+    server_name <HOSTNAME>;
+
+    client_max_body_size 50M;
+
+    # ===== IP 制限（NFR-S10.2 / US-02）=====
+    # 研修参加者・庁内出口のグローバル IP を列挙する。
+    # ⚠️ ここに書く IP は、アプリ側の AIDLC_IP_ALLOWLIST とも一致させること。
+    #    片方だけに書くと、通っても最終的に 403 になる（またはその逆）。
+    allow <ALLOWED_IP_1>;
+    # allow <ALLOWED_IP_2>;
+    deny all;
+    # ======================================
+
+    # SECURITY-02: アクセスログ（必須・無効化しない）
+    access_log /var/log/nginx/aidlc-access.log;
+    error_log  /var/log/nginx/aidlc-error.log;
+
+    # TLS（certbot が書き込む。手順書 §9 参照）
+    ssl_certificate     /etc/letsencrypt/live/<HOSTNAME>/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/<HOSTNAME>/privkey.pem;
+    include /etc/letsencrypt/options-ssl-nginx.conf;
+    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
+
+    location / {
+        proxy_pass http://127.0.0.1:8000;   # uvicorn（0.0.0.0 ではなく 127.0.0.1）
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_redirect off;
+
+        # 最適化はジョブ + ポーリング方式のため、リクエスト自体は短い。
+        # 余裕を持たせておく。
+        proxy_read_timeout 120s;
+    }
+}
