@@ -8,7 +8,7 @@ This module supplies the missing piece: read the environment, build the app once
 at import.
 
 Bind to 127.0.0.1 in deployment. The reverse proxy is the only thing that should
-reach this process (deployment-plan.md §8).
+reach this process (運用手順書 §8、非公開).
 """
 
 from __future__ import annotations

@@ -12,7 +12,7 @@ WorkingDirectory=/srv/aidlc/app
 EnvironmentFile=/etc/aidlc/app.env
 
 # 127.0.0.1 のみにバインド: リバースプロキシ以外から直接到達させない
-# (deployment-plan.md §8)
+# (運用手順書 §8、非公開)
 ExecStart=/srv/aidlc/venv/bin/uvicorn api_orchestration.asgi:app \
     --host 127.0.0.1 --port 8000 --proxy-headers
 Environment=PYTHONPATH=/srv/aidlc/app/src

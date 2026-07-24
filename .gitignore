@@ -23,6 +23,9 @@ build/
 audit/
 
 
-# 運用手順書は非公開（ホスト名・パス・受け入れ確認・障害時挙動を含むため）。
+# デプロイ計画・運用手順書は非公開。
+# ホスト名・パス・受け入れ確認・障害時の挙動に加え、
+# 「WAF 不在」「アクセス制御が何に依存するか」という弱点の棚卸しを含むため。
 # ローカルには残るが、このリポジトリでは追跡しない。
 aidlc-docs/operations/deployment-runbook.md
+aidlc-docs/operations/deployment-plan.md
