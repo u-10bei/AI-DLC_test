@@ -2476,3 +2476,24 @@ FINDING 2 (constraint that binds Code Generation): shared-infrastructure.md sect
 - build-and-test-summary.md
 
 ---
+## OPERATIONS - Per-persona user manuals - request
+**Timestamp**: 2026-07-24T10:00:00Z
+**User Input**: "承認します。operationsフェーズとして、ペルソナごとに説明書を作成したいです。"
+**AI Response**: "Build and Test approved. Entering OPERATIONS phase (extended beyond the placeholder at user request) to author per-persona user manuals. Personas: P-01 割当担当者 (coordinator - primary operator), P-02 システム管理者 (system admin - deploy/run/accounts/security), P-03 従事職員 (staff - indirect, does NOT operate the PoC UI per A-08). Manuals will describe ONLY the actually-implemented 7 screens / exposed endpoints and be honest about deferrals (comparison screen not in PoC, value shown via objective/gap). Reading personas.md to ground role details."
+**Context**: OPERATIONS - per-persona manuals. Grounding in personas.md + implemented functionality.
+
+---
+## OPERATIONS - Per-persona manuals - generated
+**Timestamp**: 2026-07-24T10:40:00Z
+**User Input**: "実装済み機能（7画面・公開エンドポイント・起動手順）に忠実な説明というより、要件定義に忠実に、どの画面でどのような操作で実現できるかという記述がありがたいです。各画面の説明書は、それとは別に作成しましょう。"
+**AI Response**: "Adjusted approach per user: authored REQUIREMENT-FAITHFUL per-persona manuals (responsibility -> operation -> screen -> US-id -> implementation-status), NOT implementation-first. Created under aidlc-docs/operations/: manual-P-01-coordinator.md (E2/E4/E5/E6/E7/E8, full operating flow), manual-P-02-admin.md (E1/E3/E5 + OS-level ops: accounts, IP/trusted_proxies, audit), manual-P-03-staff.md (indirect beneficiary, non-operator per A-08, value + production self-declaration), README.md index. Each maps to US-01..US-28 with an implementation-status column that honestly marks PoC-deferred features (US-06/10/12/25/26/27/28) as 申し送り while still describing the requirement-intended operation. Per-screen manuals (button/field level) to be authored separately as the user requested."
+**Context**: OPERATIONS - per-persona manuals complete. Per-screen manuals pending (separate deliverable).
+
+---
+## OPERATIONS - Per-screen manuals - generated
+**Timestamp**: 2026-07-24T11:10:00Z
+**User Input**: "画面別説明書を作成してからpush"
+**AI Response**: "Authored per-screen manuals under aidlc-docs/operations/screens/ (implementation-faithful, field/button/message level): 00-common (shell/nav/selected-event/errors), 01-login, 02-event, 03-masters, 04-declarations, 05-sufficiency, 06-optimize (job states + validation messages), 07-assignments (manual edit + C1..C5 violation display). Grounded in the actual React views (labels, validation strings, job-state labels). Linked from operations/README.md. Next: commit and push operations docs to remote."
+**Context**: OPERATIONS - per-screen manuals complete. Committing and pushing.
+
+---

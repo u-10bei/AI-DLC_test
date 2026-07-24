@@ -3,7 +3,7 @@
 ## Project Information
 - **Project Type**: Greenfield
 - **Start Date**: 2026-07-09T06:50:25Z
-- **Current Stage**: CONSTRUCTION - Build and Test COMPLETE, awaiting approval to proceed to OPERATIONS
+- **Current Stage**: OPERATIONS - per-persona + per-screen manuals authored (aidlc-docs/operations/)
 - **Per-Unit Loop**: iteration 8 of 8 (U-01..U-07 COMPLETE)
 - **Session note (2026-07-23T18:55:00Z)**: user approved U-08 Code Generation and paused. **ALL 8 UNITS COMPLETE (U-01..U-08).** Only Build and Test remains, then OPERATIONS (placeholder). Gates at pause: backend pytest 178 / mypy 106 clean / ruff clean / lint-imports 14 kept; frontend tsc clean / eslint clean / vitest 12 passed; H-5 non-vacuity proven. Carry-ins for Build and Test: build the frontend (npm run build in src/frontend so the U08-H4 dist mount serves it), set trusted_proxies for deploy; open items U08-H2/H3/H6, U05-H6, U06-H5, U07-H15.
 - **Session note (2026-07-23T14:00:00Z)**: session RESUMED on 2026-07-23 (paused 2026-07-17 after U-07). U-08 Functional Design and NFR Requirements completed & approved this session. Doc dates: U-08 artifacts + audit entries from the resume onward are dated 2026-07-23 (initially mis-stamped 2026-07-17, corrected per user). U-01..U-07 dates (2026-07-17 and earlier) are unchanged — that work genuinely predates the resume.
