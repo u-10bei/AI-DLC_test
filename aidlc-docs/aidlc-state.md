@@ -3,7 +3,7 @@
 ## Project Information
 - **Project Type**: Greenfield
 - **Start Date**: 2026-07-09T06:50:25Z
-- **Current Stage**: CONSTRUCTION - ALL 8 UNITS COMPLETE. Next: Build and Test (final stage)
+- **Current Stage**: CONSTRUCTION - Build and Test COMPLETE, awaiting approval to proceed to OPERATIONS
 - **Per-Unit Loop**: iteration 8 of 8 (U-01..U-07 COMPLETE)
 - **Session note (2026-07-23T18:55:00Z)**: user approved U-08 Code Generation and paused. **ALL 8 UNITS COMPLETE (U-01..U-08).** Only Build and Test remains, then OPERATIONS (placeholder). Gates at pause: backend pytest 178 / mypy 106 clean / ruff clean / lint-imports 14 kept; frontend tsc clean / eslint clean / vitest 12 passed; H-5 non-vacuity proven. Carry-ins for Build and Test: build the frontend (npm run build in src/frontend so the U08-H4 dist mount serves it), set trusted_proxies for deploy; open items U08-H2/H3/H6, U05-H6, U06-H5, U07-H15.
 - **Session note (2026-07-23T14:00:00Z)**: session RESUMED on 2026-07-23 (paused 2026-07-17 after U-07). U-08 Functional Design and NFR Requirements completed & approved this session. Doc dates: U-08 artifacts + audit entries from the resume onward are dated 2026-07-23 (initially mis-stamped 2026-07-17, corrected per user). U-01..U-07 dates (2026-07-17 and earlier) are unchanged — that work genuinely predates the resume.
@@ -373,7 +373,7 @@ See `aidlc-docs/construction/shared-infrastructure.md`. U-02..U-07 reference it;
     - Backend in-place: U08-H1 (facility/district import-export endpoints + 5 tests), U08-H4 (guarded static mount), **U07-H15 (middleware now uses the injected clock - real bug: sessions made with the frozen test clock read as expired once wall-clock passed NOW+8h)**.
     - Deviations: U08-H5 (self-contained npm project), U08-H6 (single global.css vs approved CSS Modules Q3=A - awaiting confirmation), U08-H2 (value shown via objective/gap until AssignmentResponse carries travel metrics).
     - Backend 4 gates: pytest 178, mypy 106 clean, ruff clean, lint-imports 14 kept.
-- [ ] Build and Test - **EXECUTE** (ALWAYS, after all units)
+- [x] Build and Test - **COMPLETE (2026-07-24)** - backend pytest 181 + frontend vitest 12, all gates green, 6 integration scenarios; instruction files under construction/build-and-test/. Fixed U08-H7 (SPA shell was 401'd by deny-by-default auth; auth now guards API only, IP/rate still apply to static) + regression test_static.py. Frontend built (dist/, 231KB/73KB gzip). Awaiting approval for OPERATIONS.
 
 **Note**: Each per-unit stage remains CONDITIONAL. At the start of each unit's stage, re-evaluate whether that stage adds value for that unit (e.g. Infrastructure Design for U-01 shared-kernel) and propose a skip if it does not.
 

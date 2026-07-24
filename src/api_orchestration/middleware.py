@@ -18,6 +18,8 @@ from collections.abc import Awaitable, Callable
 from datetime import UTC, datetime
 
 from fastapi import FastAPI, Request, Response
+from fastapi.routing import APIRoute
+from starlette.routing import Match
 
 from security import (
     AuthenticationFailedError,
@@ -52,6 +54,20 @@ _SECURITY_HEADERS = {
 }
 
 _Handler = Callable[[Request], Awaitable[Response]]
+
+
+def _targets_api_route(app: FastAPI, request: Request) -> bool:
+    """True if the request matches one of the API routes (not the static SPA mount).
+
+    Authentication guards the API and its data, NOT the static bundle: the browser
+    must be able to load index.html and the JS before anyone can log in (U08-H4 +
+    U08-H7). The IP allowlist and rate limiter still run for static requests; only
+    the auth gate is skipped for paths that fall through to the frontend mount.
+    """
+    for route in app.router.routes:
+        if isinstance(route, APIRoute) and route.matches(request.scope)[0] is Match.FULL:
+            return True
+    return False
 
 
 def source_ip(request: Request, trusted_proxies: tuple[str, ...], header: str) -> str:
@@ -102,6 +118,10 @@ def register_middleware(
     async def _authenticate(request: Request, call_next: _Handler) -> Response:
         route = (request.method, request.url.path)
         if route in PUBLIC_ROUTES:
+            return await call_next(request)
+        # Static assets / the SPA shell are not an API route: let them load (the IP
+        # and rate gates already ran). Only the API surface requires a session.
+        if not _targets_api_route(app, request):
             return await call_next(request)
         try:
             session_id = request.cookies.get(SESSION_COOKIE)

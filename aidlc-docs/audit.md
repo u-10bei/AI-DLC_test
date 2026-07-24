@@ -2455,3 +2455,24 @@ FINDING 2 (constraint that binds Code Generation): shared-infrastructure.md sect
 **Context**: CONSTRUCTION - U-08 Code Generation approved. ALL 8 UNITS COMPLETE. Session paused. Next: Build and Test.
 
 ---
+## Build and Test - Session Resume
+**Timestamp**: 2026-07-23T19:30:00Z
+**User Input**: "こちらは、あくまで研修用のPoCアプリなので、個人情報の混入を防いでおけば大丈夫です。それでは、再開します。"
+**AI Response**: "User confirms this is a training PoC; public repo is acceptable as long as no PII is committed (verified clean at push). Resuming CONSTRUCTION - Build and Test stage (ALWAYS, after all 8 units complete). Loading construction/build-and-test.md; will generate build/unit-test/integration-test/performance-test/summary instruction files under aidlc-docs/construction/build-and-test/ covering BOTH the Python backend (pytest/mypy/ruff/import-linter) and the React frontend (npm build/tsc/eslint/vitest), plus the frontend build step (npm run build) that feeds the U08-H4 static mount."
+**Context**: CONSTRUCTION - Build and Test stage start. Repo pushed to github.com/u-10bei/AI-DLC_test (public).
+
+---
+## Build and Test Stage
+**Timestamp**: 2026-07-24T09:30:00Z
+**Build Status**: Success (backend: mypy 107 clean / ruff clean / lint-imports 14 kept; frontend: tsc clean / eslint clean / vite build -> dist 231KB/73KB gzip)
+**Test Status**: Pass (backend pytest 181, frontend vitest 12, 6 integration scenarios all green)
+**Real defect found & fixed during this stage**: U08-H7 - the deny-by-default auth middleware 401'd the SPA shell (GET /), so the frontend could not load before login. Fixed so authentication guards only API routes (_targets_api_route via APIRoute.matches); static/SPA paths pass through while the IP allowlist and rate limiter still apply. Added tests/api_orchestration/test_static.py (3 tests: shell loads, API still 401, IP still 403). Backend went 178 -> 181 passed, mypy 106 -> 107 files.
+**Files Generated**:
+- build-instructions.md
+- unit-test-instructions.md
+- integration-test-instructions.md
+- performance-test-instructions.md
+- security-test-instructions.md
+- build-and-test-summary.md
+
+---
