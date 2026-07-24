@@ -2497,3 +2497,10 @@ FINDING 2 (constraint that binds Code Generation): shared-infrastructure.md sect
 **Context**: OPERATIONS - per-screen manuals complete. Committing and pushing.
 
 ---
+## OPERATIONS - Root README restructured as repo face + DEVELOPMENT.md
+**Timestamp**: 2026-07-24T11:40:00Z
+**User Input**: "リポジトリ直下のreadmeに、今のペルソナごとの説明書への導線を張ってもらえますか？" / "そのほかにも、このreadmeの位置づけを、リポジトリの顔としてふさわしいように、再構成する必要があります。開発用の注意事項などは、別文書にしたいと考えています。"
+**AI Response**: "Restructured root README.md as the repository's face: training-PoC banner, the problem & value (SC-01 91.96% headline), what-it-does (7 screens), prominent per-persona manual links (P-01/P-02/P-03 + operations index + screens), architecture overview (8-unit table + tech stack), implementation status (all 8 units complete, gates green), quick start, documentation map, notes. Moved developer-oriented content to a new DEVELOPMENT.md: dir-name underscore rule, directory structure, backend setup + 4 gates, Hypothesis seed, frontend npm/tsc/eslint/vitest + H-5 boundary, local run, security/PII implementation notes, architecture points, handoffs. Fixed the stale '現在の実装状況: U-01 のみ完成' line (now all 8 complete). Verified all relative links resolve. Committing and pushing."
+**Context**: OPERATIONS - documentation restructure (README = face, DEVELOPMENT.md = dev notes).
+
+---

@@ -1,55 +1,56 @@
 # 居住地考慮型 従事者割当最適化システム（PoC）
 
-災害時の避難所応援職員の割当を、**職場単位**から**居住地を考慮した数理最適化**に置き換える PoC です。
+災害時の避難所応援職員や選挙事務従事者の割当を、**職場単位**から**居住地を考慮した数理最適化**へ置き換える概念実証（PoC）です。
 
-現行方式では職員の居住地が割当に一切考慮されず、居住地から遠い施設に派遣されることで、
-①移動時間による職員の負担増、②タクシー等の移動費用の高額化 が生じています。
-本システムは、割当を一般化割当問題として解き、削減効果を数値で示します。
-
-設計文書は [`aidlc-docs/`](aidlc-docs/) にあります。
+> **⚠️ 研修用 PoC** — 本リポジトリは AI-DLC ワークフローの学習・検証を目的としたサンプル実装です。実データ・本番利用を想定していません（データは仮名化）。
 
 ---
 
-## ⚠️ ディレクトリ名の読み替え規則
+## 解決したい課題
 
-設計文書はユニットを `shared-kernel`、`distance-cost` のようにハイフンで表記します。
-一方 **Python のモジュール名にハイフンは使えません**（`import shared-kernel` は SyntaxError）。
+現行方式では職員の居住地が割当に考慮されず、居住地から遠い施設に派遣されることで次の問題が生じています。
 
-**コード上はアンダースコアを使います。**
+1. **移動時間**が長くなり、職員の負担が増える
+2. **タクシー等の移動費用**が高額化する
 
-| 文書上のユニット名 | コード上のディレクトリ・パッケージ名 |
-|------------------|--------------------------------|
-| `shared-kernel` | `src/shared_kernel/` |
-| `distance-cost` | `src/distance_cost/` |
-| `data-management` | `src/data_management/` |
-| `optimization-engine` | `src/optimization_engine/` |
-| `comparison-report` | `src/comparison_report/` |
-| `security` | `src/security/` |
-| `api-orchestration` | `src/api_orchestration/` |
-| `frontend` | `src/frontend/` |
+本システムは割当を**一般化割当問題（GAP）**として解き、資格要件・従事可否・部署継続性などの制約を守りつつ移動負担を最小化し、**削減効果を数値で示します**。
+
+> 検証例: 遠方に派遣されていた職員（移動 11,198 秒 / ¥37,326）が近隣（900 秒 / ¥0）へ最適化され、**移動時間 91.96% / 費用 100% 削減**（成功基準 SC-01）。
 
 ---
 
-## ディレクトリ構造
+## 何ができるか（画面）
 
-```text
-.
-├── pyproject.toml        依存とツール設定
-├── .importlinter         ユニット境界の機械的強制
-├── config/               外部化された設定（NFR-M03）
-├── src/
-│   └── shared_kernel/    U-01: 全ユニットが共有する型
-└── tests/
-    └── shared_kernel/
-```
-
-アプリケーションコードはワークスペースルート配下にのみ置きます。`aidlc-docs/` には文書のみです。
+| 画面 | できること |
+|------|-----------|
+| ログイン | 庁内ネットワークからの認証 |
+| イベント | 災害避難所応援・選挙事務のイベント登録 |
+| マスタ | 職員・施設・小学校区マスタの CSV 一括取込／出力 |
+| 申告取込 | 従事可否申告の一括登録 |
+| 充足状況 | 従事可能人数と必要人数の充足・不足の可視化 |
+| 最適化 | 重み・制限時間を指定して割当を計算（進捗ポーリング） |
+| 割当結果 | 割当の一覧表示と、制約を自動検証しながらの手動修正 |
 
 ---
 
-## ユニット構成
+## 📖 操作説明書
 
-モノリスですが、内部は8つのユニットに分割されています。依存は常に番号の小さい方へ向かい、循環しません。
+利用者の役割ごとに、要件に沿って「どの操作をどの画面で行うか」を説明しています。
+
+| ペルソナ | 説明書 | 内容 |
+|---------|--------|------|
+| P-01 割当担当者 | [manual-P-01-coordinator.md](aidlc-docs/operations/manual-P-01-coordinator.md) | イベント作成〜割当確定までの主要操作 |
+| P-02 システム管理者 | [manual-P-02-admin.md](aidlc-docs/operations/manual-P-02-admin.md) | マスタ管理・アクセス制御・監査・運用 |
+| P-03 従事職員 | [manual-P-03-staff.md](aidlc-docs/operations/manual-P-03-staff.md) | 間接的受益者（本 PoC では非操作） |
+
+- 索引・凡例: [`aidlc-docs/operations/README.md`](aidlc-docs/operations/README.md)
+- 画面別の操作手順（項目・ボタン単位）: [`aidlc-docs/operations/screens/`](aidlc-docs/operations/screens/)
+
+---
+
+## アーキテクチャ概要
+
+モノリスですが、内部は 8 つのユニットに分割されています。依存は常に番号の小さい方へ向かい、循環しません。
 
 | # | ユニット | 責務 | 依存 |
 |---|---------|------|------|
@@ -60,76 +61,62 @@
 | U-05 | `comparison_report` | ベースライン再現と削減効果の算出 | U-01, U-03, U-04 |
 | U-06 | `security` | 認証・認可・ネットワーク統制・監査ログ | U-01 |
 | U-07 | `api_orchestration` | REST API、割当結果の調整、設定管理 | U-01〜U-06 |
-| U-08 | `frontend` | Web UI | U-07（REST 経由のみ） |
+| U-08 | `frontend` | Web UI（React + TypeScript） | U-07（REST 経由のみ） |
 
-**現在の実装状況**: U-01 のみ完成。U-02 以降は未着手。
+- **ヘキサゴナル（ポート & アダプター）**。U-01 のプロダクション依存はゼロ（標準ライブラリのみ）で、Pydantic は U-07 の API 境界に閉じ込めています。
+- ユニット境界は**機械的に強制**します（バックエンド: import-linter、フロント→バックエンド import 禁止: ESLint）。
 
----
+### 技術スタック
 
-## 技術スタック
-
-| 項目 | 選択 | 理由 |
-|------|------|------|
-| 言語 | Python | 40万の0-1変数を扱える MILP ソルバーが実質 Python と Java に限られ、PBT フレームワーク（Hypothesis）の品質で Python が優位 |
-| Web | FastAPI + Pydantic | 型注釈に基づく入力検証 |
-| DB | SQLite（PoC）→ PostgreSQL（実運用） | SQLAlchemy + Alembic 経由。移行は接続文字列の変更で済む |
-| PBT | Hypothesis | カスタム生成器、シュリンキング、シード再現性 |
-| 型検査 | mypy strict | U-01 の型が6ユニットを拘束するため、破壊的変更を CI で検出 |
-| 境界強制 | import-linter | モノリスではモジュール境界は規約だけでは守られない |
-
-**U-01 のプロダクション依存はゼロです**（標準ライブラリのみ）。Pydantic は U-07 の API 境界に閉じ込めています。
-これにより、SQLite を PostgreSQL に替えても、Web フレームワークを替えても、U-01 は変わりません。
+| 領域 | 選択 |
+|------|------|
+| バックエンド | Python 3.12 / FastAPI + Pydantic / SQLite→PostgreSQL（SQLAlchemy + Alembic） / OR-Tools CP-SAT |
+| フロントエンド | React 18 + TypeScript / Vite / TanStack Query |
+| 品質保証 | mypy strict・ruff・import-linter / Hypothesis・fast-check（プロパティベーステスト） |
 
 ---
 
-## セットアップ
+## 実装状況
+
+**U-01〜U-08 すべて完成**（INCEPTION → CONSTRUCTION → Build and Test → Operations 説明書）。全ゲート green。
+
+| | 結果 |
+|---|------|
+| バックエンド | pytest **181 passed** / mypy strict（107 files）/ ruff / import-linter **14 契約** |
+| フロントエンド | tsc / eslint / vitest **12 passed** |
+
+詳細: [`aidlc-docs/construction/build-and-test/build-and-test-summary.md`](aidlc-docs/construction/build-and-test/build-and-test-summary.md)
+
+---
+
+## クイックスタート
 
 ```bash
-# 依存のインストール（uv を推奨。Poetry も可）
+# バックエンド（API + ワーカー）
 uv sync
+uvicorn api_orchestration:build_application --factory --port 8000   # API
+python -m api_orchestration.worker                                   # 最適化ワーカー（別プロセス）
 
-# または pip
-python -m venv .venv && source .venv/bin/activate
-pip install -e ".[dev]"
+# フロントエンド
+cd src/frontend && npm install && npm run dev                        # 開発サーバ（API を :8000 へプロキシ）
 ```
 
-## テストと検証
-
-4つのゲートすべてが CI で強制されます。
-
-```bash
-# 単体テスト（例示ベース + プロパティベース）
-PYTHONPATH=src pytest
-
-# 型検査（strict モード）
-mypy
-
-# リンタ・フォーマッタ
-ruff check src tests
-
-# ユニット境界の検証（R-2, R-3 ...）
-PYTHONPATH=src lint-imports
-```
-
-### プロパティベーステストのシード
-
-CI では**実行ごとにランダムなシード**を使います（`CI=true` でプロファイルが切り替わります）。
-固定シードは実行を決定的にしますが、毎回同じ入力しか試さず、未知のバグを見つける能力を失います。
-
-失敗時は Hypothesis がシードを出力します。再現するには:
-
-```bash
-pytest --hypothesis-seed=<出力されたシード>
-```
+セットアップ・テスト・ビルドの詳細、開発上の注意は **[DEVELOPMENT.md](DEVELOPMENT.md)** を参照してください。
 
 ---
 
-## セキュリティ上の注意
+## ドキュメント
 
-- **職員の氏名と居住小学校区は個人情報です。** `Staff.__repr__` は両者を伏字にします。
-  誤って `logger.info(staff)` と書いても漏れません。
-- `src/security/` は `shared_kernel.Staff` を import できません（`.importlinter` で強制）。
-  監査ログに個人情報が到達する経路が構造的に存在しません。
-- **データディレクトリは暗号化ボリューム上に配置してください**（`app.db` と `audit/`）。
-  詳細は [`aidlc-docs/construction/shared-infrastructure.md`](aidlc-docs/construction/shared-infrastructure.md)。
-- 監査ログは追記専用ファイル（`chattr +a`）です。アプリケーションは追記のみ可能で、削除できません。
+| 文書 | 内容 |
+|------|------|
+| [`aidlc-docs/`](aidlc-docs/) | 要件・ユーザーストーリー・設計・監査証跡（AI-DLC の全成果物） |
+| [`aidlc-docs/operations/`](aidlc-docs/operations/) | 操作説明書（ペルソナ別・画面別） |
+| [`aidlc-docs/construction/build-and-test/`](aidlc-docs/construction/build-and-test/) | ビルド・テスト手順とサマリ |
+| [`aidlc-docs/construction/shared-infrastructure.md`](aidlc-docs/construction/shared-infrastructure.md) | デプロイ・インフラ・セキュリティ境界 |
+| [DEVELOPMENT.md](DEVELOPMENT.md) | 開発ガイド（セットアップ・ゲート・実装上の注意・申し送り） |
+
+---
+
+## 注記
+
+研修用 PoC のため、実データは扱わず、氏名等は仮名化しています。個人情報（居住地情報）の取り扱い・監査・アクセス制御は構造的に担保していますが、本番運用には別途の整備（アカウント運用、負荷試験、依存脆弱性スキャン等）が必要です。詳細は DEVELOPMENT.md の「申し送り」を参照してください。
