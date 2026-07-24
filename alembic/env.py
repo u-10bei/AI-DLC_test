@@ -18,7 +18,11 @@ from data_management.schema import metadata
 
 config = context.config
 
-_env_url = os.environ.get("DATABASE_URL")
+# The application configures everything through AIDLC_-prefixed variables
+# (api_orchestration.settings). Accept that name first so a deployment cannot
+# migrate one database while the app runs against another; keep the bare name
+# for backwards compatibility.
+_env_url = os.environ.get("AIDLC_DATABASE_URL") or os.environ.get("DATABASE_URL")
 if _env_url:
     config.set_main_option("sqlalchemy.url", _env_url)
 
