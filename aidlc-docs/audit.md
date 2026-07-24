@@ -2553,3 +2553,10 @@ FINDING 2 (constraint that binds Code Generation): shared-infrastructure.md sect
 **Context**: OPERATIONS - runbook review. Blocking deployment bug fixed before the training.
 
 ---
+## OPERATIONS - Private documents consolidated into private/
+**Timestamp**: 2026-07-24T17:10:00Z
+**User Input**: "(a) + (b)" then "新しいディレクトリを切って、.gitignoreに登録する形で進めたい。"
+**AI Response**: "Moved both non-public documents into a new repo-root private/ directory and switched .gitignore from two per-file entries to a single directory rule (/private/), so any future operational document added there is excluded automatically rather than depending on someone remembering to list it. Verified with git check-ignore that both files are excluded and that git status shows nothing under private/. No history rewrite was needed this time - both files had already been purged from history in the previous two rewrites, and moving an untracked file does not touch git objects. Updated aidlc-docs/operations/README.md to name the new location (the location is not itself sensitive; the content is), and documented the convention in DEVELOPMENT.md (tracked, so it actually reaches a reader): what goes in private/, why it is not published (weakness inventory - no WAF, what access control depends on), that it is outside git so backups are the owner's responsibility, and that operational detail must be written there rather than into aidlc-docs/. Also redacted the two source comments that pointed at the now-private plan. Gates green: pytest 193, mypy 113 files, ruff, lint-imports 14."
+**Context**: OPERATIONS - private/ directory convention established.
+
+---
