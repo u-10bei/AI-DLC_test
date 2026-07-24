@@ -2560,3 +2560,10 @@ FINDING 2 (constraint that binds Code Generation): shared-infrastructure.md sect
 **Context**: OPERATIONS - private/ directory convention established.
 
 ---
+## Session Pause - deployment prepared, awaiting the Azure work
+**Timestamp**: 2026-07-24T17:25:00Z
+**User Input**: "ここで、一区切りにします。"
+**AI Response**: "Paused. Deployment preparation is complete: W-1..W-6 implemented (env config, ASGI entry point, provisioning CLI, doc fixes, systemd/nginx artifacts, runbook), a blocking alembic defect found and fixed with regression tests, and the two operational documents moved to a gitignored private/ directory after being purged from public history. Gates green: pytest 193, mypy 113 files, ruff, lint-imports 14; frontend tsc/eslint/vitest 12. Remaining work is the actual Azure build, to be done from private/deployment-runbook.md at the next training. Nothing is in flight; the working tree is clean and synced with the remote."
+**Context**: Session pause. Next: execute the Azure deployment per private/deployment-runbook.md.
+
+---
