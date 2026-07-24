@@ -2504,3 +2504,10 @@ FINDING 2 (constraint that binds Code Generation): shared-infrastructure.md sect
 **Context**: OPERATIONS - documentation restructure (README = face, DEVELOPMENT.md = dev notes).
 
 ---
+## Session Pause - awaiting next training (production deploy)
+**Timestamp**: 2026-07-24T12:00:00Z
+**User Input**: "このままで大丈夫です。この後は、次の研修時に本番デプロイを行う予定にします。それまで、お待ちください。"
+**AI Response**: "Acknowledged. README/DEVELOPMENT split kept as-is (DEVELOPMENT.md at repo root). Pausing here. Next planned activity: PRODUCTION DEPLOYMENT at the next training session. Current state: all 8 units + Build and Test complete, Operations manuals (per-persona + per-screen) authored, all pushed to github.com/u-10bei/AI-DLC_test (public, main; latest commit 815f641). No outstanding work items; awaiting user."
+**Context**: Session pause. Next: production deployment (next training). See DEVELOPMENT.md handoffs for pre-production items.
+
+---
