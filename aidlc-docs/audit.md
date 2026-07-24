@@ -2532,3 +2532,10 @@ FINDING 2 (constraint that binds Code Generation): shared-infrastructure.md sect
 **Context**: OPERATIONS - deployment implementation complete. Ready for the actual Azure deployment at the next training.
 
 ---
+## OPERATIONS - Runbook converted to Azure Portal (GUI) + TLS/NSG conflict resolved
+**Timestamp**: 2026-07-24T14:10:00Z
+**User Input**: "Azure 上での実作業は、管理画面からguiで行おうと思っていました。" + answer to TLS/NSG question: "NSGは443開放・アプリ側IP制限で防御(推奨)"
+**AI Response**: "Rewrote deployment-runbook.md section 1 as Azure Portal (GUI) click-by-click steps: resource group, VM wizard (Basics/Disks/Networking with exact values), DNS name label on the public IP (required by Let's Encrypt), NSG inbound rules table, connection check; kept the az CLI version in a collapsed <details> appendix. Flagged the GUI-specific pitfall that the wizard's 'Allow selected ports' opens them to 0.0.0.0/0 including SSH — instructed to select None and add rules explicitly. RESOLVED A REAL CONFLICT found while converting: restricting 443 to the trainee IP (as originally planned) would make Let's Encrypt certificate issuance FAIL, because ACME validation comes from Let's Encrypt servers with unpredictable source IPs; user chose to open 80/443 to the Internet and rely on the app-layer IP allowlist. HONESTLY CORRECTED the earlier claim in deployment-plan.md §6 that 'NSG source-IP restriction compensates for the missing WAF' — that no longer holds for HTTP; the app-level allowlist and rate limiter are now the front line, network-layer restriction applies to SSH(22) only. Added deployment-plan.md §14 recording the decision, its residual risk, and the conditions for reverting (real data -> WAF-backed platform or DNS-01 challenge). Updated acceptance check A-2 to stress that the 403 from a non-allowlisted IP must be verified in practice, added A-10 (SSH blocked from other IPs), and updated the certificate troubleshooting row."
+**Context**: OPERATIONS - runbook GUI conversion + network posture decision recorded.
+
+---
